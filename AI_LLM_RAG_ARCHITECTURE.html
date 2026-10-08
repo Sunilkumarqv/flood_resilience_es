@@ -5,109 +5,58 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="snowflake-source" content="cortex-agent-authored" />
   <title>Valencia Flood Resilience - AI/LLM/RAG Architecture</title>
-  <script type="application/json" id="snowflake-report-metadata">
-  {
-    "generated": "2026-10-08",
-    "intent": "Technical architecture document covering LLM, RAG, document chunking, semantic model, and Cortex Agent patterns used in the Valencia Flood Resilience project",
-    "sections": [
-      { "id": "executive-summary", "title": "Executive Summary", "dataSources": [], "producerNotes": "Static content derived from project analysis." },
-      { "id": "architecture-overview", "title": "Architecture Overview", "dataSources": [], "producerNotes": "Mermaid diagrams generated from project code analysis." },
-      { "id": "rag-pipeline", "title": "RAG Pipeline Deep-Dive", "dataSources": [], "producerNotes": "Covers PDF parsing, chunking, embedding, retrieval." },
-      { "id": "cortex-agent", "title": "Cortex Agent Architecture", "dataSources": [], "producerNotes": "Agent tool orchestration and multi-tool routing." },
-      { "id": "semantic-model", "title": "Semantic Model Layer", "dataSources": [], "producerNotes": "Cortex Analyst YAML, Semantic Views, Apache Ossie." },
-      { "id": "llm-usage", "title": "LLM Usage Patterns", "dataSources": [], "producerNotes": "All CORTEX.COMPLETE calls and prompting strategies." }
-    ]
-  }
-  </script>
-  <script src="/libs/mermaid@10.9.6/mermaid.min.js"></script>
   <style>
     :root { color-scheme: light dark; }
     * { box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-      max-width: 960px; width: 100%; margin: 0 auto;
+      max-width: 980px; width: 100%; margin: 0 auto;
       padding: clamp(16px, 4vw, 32px);
-      color: light-dark(#1e293b, #e2e8f0);
-      background: light-dark(#ffffff, #0f172a);
-      line-height: 1.65;
+      color: #1e293b; background: #ffffff; line-height: 1.65;
     }
-    h1 { color: light-dark(#0c4a6e, #7dd3fc); font-size: 1.9rem; margin-bottom: 0.25em; border-bottom: 3px solid light-dark(#0ea5e9, #0284c7); padding-bottom: 0.3em; }
-    h2 { color: light-dark(#0369a1, #38bdf8); font-size: 1.45rem; margin-top: 2.2em; border-bottom: 1px solid light-dark(#e2e8f0, #334155); padding-bottom: 0.2em; }
-    h3 { color: light-dark(#0c4a6e, #7dd3fc); font-size: 1.15rem; margin-top: 1.6em; }
-    h4 { color: light-dark(#475569, #94a3b8); font-size: 1rem; margin-top: 1.2em; }
-    a { color: light-dark(#0284c7, #38bdf8); }
+    h1 { color: #0c4a6e; font-size: 1.9rem; margin-bottom: 0.25em; border-bottom: 3px solid #0ea5e9; padding-bottom: 0.3em; }
+    h2 { color: #0369a1; font-size: 1.45rem; margin-top: 2.2em; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.2em; }
+    h3 { color: #0c4a6e; font-size: 1.15rem; margin-top: 1.6em; }
+    h4 { color: #475569; font-size: 1rem; margin-top: 1.2em; }
+    a { color: #0284c7; }
     img, svg { max-width: 100%; height: auto; }
     p { margin: 0.75em 0; }
-    code {
-      font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'SF Mono', Consolas, monospace;
-      font-size: 0.88em;
-      background: light-dark(#f1f5f9, #1e293b);
-      padding: 2px 6px; border-radius: 4px;
-    }
-    pre {
-      background: light-dark(#f8fafc, #1e293b);
-      border: 1px solid light-dark(#e2e8f0, #334155);
-      border-radius: 8px; padding: 16px; overflow-x: auto;
-      font-size: 0.85em; line-height: 1.55;
-    }
+    code { font-family: 'Cascadia Code','Fira Code','JetBrains Mono',Consolas,monospace; font-size: 0.88em; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
+    pre { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; overflow-x: auto; font-size: 0.85em; line-height: 1.55; }
     pre code { background: none; padding: 0; }
     .table-wrap { overflow-x: auto; margin: 16px 0; }
     table { border-collapse: collapse; width: 100%; font-size: 0.9em; }
-    th, td { border: 1px solid light-dark(#e2e8f0, #334155); padding: 8px 12px; text-align: left; }
-    th { background: light-dark(#f1f5f9, #1e293b); font-weight: 600; color: light-dark(#0c4a6e, #7dd3fc); }
-    tr:nth-child(even) { background: light-dark(#f8fafc, #0f172a); }
-    .callout {
-      background: light-dark(#eff6ff, #172554);
-      border-left: 4px solid light-dark(#3b82f6, #60a5fa);
-      padding: 12px 16px; border-radius: 0 8px 8px 0;
-      margin: 16px 0; font-size: 0.92em;
-    }
-    .callout-warn {
-      background: light-dark(#fefce8, #422006);
-      border-left-color: light-dark(#eab308, #facc15);
-    }
-    .callout strong { color: light-dark(#1e40af, #93c5fd); }
-    .callout-warn strong { color: light-dark(#854d0e, #fde68a); }
-    .badge {
-      display: inline-block; padding: 2px 8px; border-radius: 4px;
-      font-size: 0.78em; font-weight: 600; letter-spacing: 0.3px;
-    }
-    .badge-llm { background: light-dark(#dbeafe, #1e3a5f); color: light-dark(#1e40af, #93c5fd); }
-    .badge-rag { background: light-dark(#dcfce7, #14532d); color: light-dark(#166534, #86efac); }
-    .badge-sql { background: light-dark(#fce7f3, #831843); color: light-dark(#9d174d, #f9a8d4); }
-    .badge-sem { background: light-dark(#fef3c7, #78350f); color: light-dark(#92400e, #fcd34d); }
-    .section-num {
-      display: inline-block; width: 28px; height: 28px; line-height: 28px;
-      text-align: center; border-radius: 50%;
-      background: light-dark(#0ea5e9, #0284c7); color: #fff;
-      font-weight: 700; font-size: 0.85em; margin-right: 6px;
-    }
-    .flow-step {
-      background: light-dark(#f0f9ff, #0c1929);
-      border: 1px solid light-dark(#bae6fd, #1e3a5f);
-      border-radius: 8px; padding: 14px 16px; margin: 10px 0;
-    }
+    th, td { border: 1px solid #e2e8f0; padding: 8px 12px; text-align: left; }
+    th { background: #f1f5f9; font-weight: 600; color: #0c4a6e; }
+    tr:nth-child(even) td { background: #f8fafc; }
+    .callout { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; font-size: 0.92em; }
+    .callout-warn { background: #fefce8; border-left-color: #eab308; }
+    .callout strong { color: #1e40af; }
+    .callout-warn strong { color: #854d0e; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.78em; font-weight: 600; letter-spacing: 0.3px; }
+    .badge-llm { background: #dbeafe; color: #1e40af; }
+    .badge-rag { background: #dcfce7; color: #166534; }
+    .badge-sql { background: #fce7f3; color: #9d174d; }
+    .badge-sem { background: #fef3c7; color: #92400e; }
+    .section-num { display: inline-block; width: 28px; height: 28px; line-height: 28px; text-align: center; border-radius: 50%; background: #0ea5e9; color: #fff; font-weight: 700; font-size: 0.85em; margin-right: 6px; }
+    .flow-step { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 14px 16px; margin: 10px 0; }
     .flow-step h4 { margin-top: 0; }
-    .subtitle { color: light-dark(#64748b, #94a3b8); font-size: 0.95em; margin-top: 0; }
-    .mermaid { margin: 20px 0; }
-    .toc { background: light-dark(#f8fafc, #1e293b); border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
+    .subtitle { color: #64748b; font-size: 0.95em; margin-top: 0; }
+    .toc { background: #f8fafc; border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
     .toc a { text-decoration: none; }
     .toc a:hover { text-decoration: underline; }
     .toc ul { list-style: none; padding-left: 0; margin: 0; }
     .toc li { padding: 4px 0; }
-    .toc li::before { content: ''; }
     .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin: 16px 0; }
-    .card {
-      background: light-dark(#f8fafc, #1e293b);
-      border: 1px solid light-dark(#e2e8f0, #334155);
-      border-radius: 8px; padding: 16px;
-    }
+    .card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; }
     .card h4 { margin-top: 0; }
+    .diagram-wrap { overflow-x: auto; margin: 20px 0; text-align: center; }
+    .diagram-wrap svg { display: inline-block; }
   </style>
 </head>
 <body>
 
-  <h1>Valencia Flood Resilience - AI / LLM / RAG Architecture</h1>
+  <h1>Valencia Flood Resilience &mdash; AI / LLM / RAG Architecture</h1>
   <p class="subtitle">Technical deep-dive into how this project leverages Large Language Models, Retrieval-Augmented Generation, document chunking, semantic models, and Cortex Agent orchestration &mdash; all natively within Snowflake.</p>
 
   <div class="toc">
@@ -117,7 +66,7 @@
       <li><a href="#architecture-overview">2. End-to-End Architecture Overview</a></li>
       <li><a href="#rag-pipeline">3. RAG Pipeline Deep-Dive</a></li>
       <li><a href="#cortex-agent">4. Cortex Agent &mdash; Multi-Tool Orchestration</a></li>
-      <li><a href="#semantic-model">5. Semantic Model Layer (Analyst YAML / Semantic Views / Ossie)</a></li>
+      <li><a href="#semantic-model">5. Semantic Model Layer</a></li>
       <li><a href="#llm-usage">6. LLM Usage Patterns &amp; Prompting Strategies</a></li>
       <li><a href="#data-flow">7. Complete Data Flow: From Question to Answer</a></li>
       <li><a href="#security">8. Data Security &amp; Governance</a></li>
@@ -127,9 +76,7 @@
 
   <!-- ============================================================ -->
   <h2 id="executive-summary"><span class="section-num">1</span> Executive Summary</h2>
-
   <p>This project uses <strong>four distinct AI/LLM patterns</strong>, all running natively inside Snowflake with no external API calls:</p>
-
   <div class="grid-2">
     <div class="card">
       <h4><span class="badge badge-rag">RAG</span> Retrieval-Augmented Generation</h4>
@@ -151,79 +98,101 @@
 
   <!-- ============================================================ -->
   <h2 id="architecture-overview"><span class="section-num">2</span> End-to-End Architecture Overview</h2>
+  <p>Data flows left-to-right: from raw sources, through processing and indexing, into the AI layer, and out to users.</p>
 
-  <p>The diagram below shows how all AI components connect. Data flows left-to-right: from raw sources, through processing and indexing, into the AI layer, and out to users.</p>
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 1100 520" width="1100" height="520" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="11">
+      <defs>
+        <marker id="ah" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#64748b"/></marker>
+        <filter id="ds"><feDropShadow dx="1" dy="1" stdDeviation="2" flood-opacity="0.1"/></filter>
+      </defs>
+      <!-- Column labels -->
+      <rect x="10" y="10" width="180" height="30" rx="6" fill="#0ea5e9"/><text x="100" y="30" text-anchor="middle" fill="#fff" font-weight="700" font-size="12">DATA SOURCES</text>
+      <rect x="220" y="10" width="200" height="30" rx="6" fill="#8b5cf6"/><text x="320" y="30" text-anchor="middle" fill="#fff" font-weight="700" font-size="12">PROCESSING</text>
+      <rect x="450" y="10" width="210" height="30" rx="6" fill="#f59e0b"/><text x="555" y="30" text-anchor="middle" fill="#fff" font-weight="700" font-size="12">INDEXING &amp; STORAGE</text>
+      <rect x="690" y="10" width="190" height="30" rx="6" fill="#ef4444"/><text x="785" y="30" text-anchor="middle" fill="#fff" font-weight="700" font-size="12">AI LAYER</text>
+      <rect x="910" y="10" width="170" height="30" rx="6" fill="#22c55e"/><text x="995" y="30" text-anchor="middle" fill="#fff" font-weight="700" font-size="12">DELIVERY</text>
 
-  <pre class="mermaid">
-flowchart LR
-    subgraph Sources["DATA SOURCES"]
-        PDF["Policy PDFs<br/>(2 documents)"]
-        CSV["Flood Risk &amp; SVI<br/>CSV Files"]
-        MKT["Overture Maps<br/>Marketplace<br/>(2.3B buildings)"]
-    end
+      <!-- Source boxes -->
+      <rect x="20" y="60" width="160" height="50" rx="8" fill="#e0f2fe" stroke="#0ea5e9" filter="url(#ds)"/><text x="100" y="82" text-anchor="middle" font-weight="600" fill="#0c4a6e">Policy PDFs</text><text x="100" y="97" text-anchor="middle" fill="#475569" font-size="10">(2 documents)</text>
+      <rect x="20" y="130" width="160" height="50" rx="8" fill="#e0f2fe" stroke="#0ea5e9" filter="url(#ds)"/><text x="100" y="152" text-anchor="middle" font-weight="600" fill="#0c4a6e">Flood Risk &amp; SVI</text><text x="100" y="167" text-anchor="middle" fill="#475569" font-size="10">CSV Files</text>
+      <rect x="20" y="200" width="160" height="50" rx="8" fill="#e0f2fe" stroke="#0ea5e9" filter="url(#ds)"/><text x="100" y="222" text-anchor="middle" font-weight="600" fill="#0c4a6e">Overture Maps</text><text x="100" y="237" text-anchor="middle" fill="#475569" font-size="10">Marketplace (2.3B bldgs)</text>
 
-    subgraph Processing["PROCESSING LAYER"]
-        PARSE["CORTEX.PARSE_DOCUMENT<br/>PDF → Text"]
-        CHUNK["Text Chunking<br/>(split on \\n\\n, &gt;80 chars)"]
-        GEO["Geospatial Pipeline<br/>H3 Indexing + Joins"]
-        SCORE["Vulnerability Scoring<br/>40% Risk + 30% SVI + 30% Zone"]
-    end
+      <!-- Processing boxes -->
+      <rect x="230" y="55" width="180" height="42" rx="8" fill="#ede9fe" stroke="#8b5cf6" filter="url(#ds)"/><text x="320" y="74" text-anchor="middle" font-weight="600" fill="#5b21b6">PARSE_DOCUMENT</text><text x="320" y="88" text-anchor="middle" fill="#6b21a8" font-size="10">PDF → Text</text>
+      <rect x="230" y="110" width="180" height="42" rx="8" fill="#ede9fe" stroke="#8b5cf6" filter="url(#ds)"/><text x="320" y="129" text-anchor="middle" font-weight="600" fill="#5b21b6">Text Chunking</text><text x="320" y="143" text-anchor="middle" fill="#6b21a8" font-size="10">split \\n\\n, &gt;80 chars</text>
+      <rect x="230" y="175" width="180" height="42" rx="8" fill="#ede9fe" stroke="#8b5cf6" filter="url(#ds)"/><text x="320" y="194" text-anchor="middle" font-weight="600" fill="#5b21b6">Geospatial Pipeline</text><text x="320" y="208" text-anchor="middle" fill="#6b21a8" font-size="10">H3 Indexing + Joins</text>
+      <rect x="230" y="230" width="180" height="42" rx="8" fill="#ede9fe" stroke="#8b5cf6" filter="url(#ds)"/><text x="320" y="249" text-anchor="middle" font-weight="600" fill="#5b21b6">Vulnerability Scoring</text><text x="320" y="263" text-anchor="middle" fill="#6b21a8" font-size="10">40% Risk + 30% SVI + 30% Zone</text>
 
-    subgraph Index["INDEXING &amp; STORAGE"]
-        CSS["CORTEX SEARCH SERVICE<br/>(vector index + BM25)"]
-        BFR["BUILDING_FLOOD_RISK<br/>(2M+ rows)"]
-        PFS["PARISH_FLOOD_SUMMARY<br/>(34 comarcas)"]
-        SEM["Semantic Model YAML<br/>(dimensions, measures,<br/>verified queries)"]
-    end
+      <!-- Index boxes -->
+      <rect x="460" y="55" width="190" height="42" rx="8" fill="#fef3c7" stroke="#f59e0b" filter="url(#ds)"/><text x="555" y="74" text-anchor="middle" font-weight="600" fill="#92400e">Cortex Search Service</text><text x="555" y="88" text-anchor="middle" fill="#a16207" font-size="10">vector index + BM25</text>
+      <rect x="460" y="115" width="190" height="42" rx="8" fill="#fef3c7" stroke="#f59e0b" filter="url(#ds)"/><text x="555" y="134" text-anchor="middle" font-weight="600" fill="#92400e">BUILDING_FLOOD_RISK</text><text x="555" y="148" text-anchor="middle" fill="#a16207" font-size="10">2M+ rows</text>
+      <rect x="460" y="175" width="190" height="42" rx="8" fill="#fef3c7" stroke="#f59e0b" filter="url(#ds)"/><text x="555" y="194" text-anchor="middle" font-weight="600" fill="#92400e">PARISH_FLOOD_SUMMARY</text><text x="555" y="208" text-anchor="middle" fill="#a16207" font-size="10">34 comarcas</text>
+      <rect x="460" y="235" width="190" height="42" rx="8" fill="#fef3c7" stroke="#f59e0b" filter="url(#ds)"/><text x="555" y="254" text-anchor="middle" font-weight="600" fill="#92400e">Semantic Model YAML</text><text x="555" y="268" text-anchor="middle" fill="#a16207" font-size="10">dims, measures, VQRs</text>
 
-    subgraph AI["AI LAYER"]
-        AGENT["CORTEX AGENT<br/>FLOOD_RISK_AGENT"]
-        ANALYST["Cortex Analyst<br/>(Text-to-SQL)"]
-        SEARCH["Cortex Search<br/>(Semantic Retrieval)"]
-        LLM["CORTEX.COMPLETE<br/>llama3.1-70b"]
-    end
+      <!-- AI boxes -->
+      <rect x="700" y="55" width="170" height="42" rx="8" fill="#fee2e2" stroke="#ef4444" filter="url(#ds)"/><text x="785" y="74" text-anchor="middle" font-weight="600" fill="#991b1b">Cortex Search</text><text x="785" y="88" text-anchor="middle" fill="#b91c1c" font-size="10">Semantic Retrieval (RAG)</text>
+      <rect x="700" y="115" width="170" height="42" rx="8" fill="#fee2e2" stroke="#ef4444" filter="url(#ds)"/><text x="785" y="134" text-anchor="middle" font-weight="600" fill="#991b1b">Cortex Analyst</text><text x="785" y="148" text-anchor="middle" fill="#b91c1c" font-size="10">Text-to-SQL</text>
+      <rect x="700" y="195" width="170" height="55" rx="8" fill="#fca5a5" stroke="#dc2626" stroke-width="2" filter="url(#ds)"/><text x="785" y="218" text-anchor="middle" font-weight="700" fill="#7f1d1d" font-size="13">CORTEX AGENT</text><text x="785" y="235" text-anchor="middle" fill="#991b1b" font-size="10">FLOOD_RISK_AGENT</text>
+      <rect x="700" y="270" width="170" height="42" rx="8" fill="#fee2e2" stroke="#ef4444" filter="url(#ds)"/><text x="785" y="289" text-anchor="middle" font-weight="600" fill="#991b1b">CORTEX.COMPLETE</text><text x="785" y="303" text-anchor="middle" fill="#b91c1c" font-size="10">llama3.1-70b</text>
 
-    subgraph Delivery["DELIVERY"]
-        DASH["Streamlit Dashboard<br/>(4 tabs)"]
-        STUDIO["Agent Studio<br/>(conversational)"]
-        INTEL["Snowflake Intelligence"]
-    end
+      <!-- Delivery boxes -->
+      <rect x="920" y="60" width="150" height="42" rx="8" fill="#dcfce7" stroke="#22c55e" filter="url(#ds)"/><text x="995" y="79" text-anchor="middle" font-weight="600" fill="#166534">Agent Studio</text><text x="995" y="93" text-anchor="middle" fill="#15803d" font-size="10">Conversational Q&amp;A</text>
+      <rect x="920" y="120" width="150" height="42" rx="8" fill="#dcfce7" stroke="#22c55e" filter="url(#ds)"/><text x="995" y="139" text-anchor="middle" font-weight="600" fill="#166534">Snowflake Intelligence</text><text x="995" y="153" text-anchor="middle" fill="#15803d" font-size="10">Unified AI interface</text>
+      <rect x="920" y="180" width="150" height="42" rx="8" fill="#dcfce7" stroke="#22c55e" filter="url(#ds)"/><text x="995" y="199" text-anchor="middle" font-weight="600" fill="#166534">Streamlit Dashboard</text><text x="995" y="213" text-anchor="middle" fill="#15803d" font-size="10">4-tab interactive app</text>
 
-    PDF --> PARSE --> CHUNK --> CSS
-    CSV --> GEO
-    MKT --> GEO --> SCORE --> BFR
-    BFR --> PFS
-    PFS --> SEM
-    SEM --> ANALYST
-    CSS --> SEARCH
-    ANALYST --> AGENT
-    SEARCH --> AGENT
-    BFR --> LLM
-    PFS --> LLM
-    AGENT --> STUDIO
-    AGENT --> INTEL
-    LLM --> DASH
-    PFS --> DASH
+      <!-- Arrows: Sources → Processing -->
+      <line x1="180" y1="82" x2="228" y2="76" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah)"/>
+      <line x1="180" y1="155" x2="228" y2="196" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah)"/>
+      <line x1="180" y1="225" x2="228" y2="196" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah)"/>
+      <!-- Processing internal -->
+      <line x1="320" y1="97" x2="320" y2="108" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah)"/>
+      <line x1="320" y1="217" x2="320" y2="228" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah)"/>
+      <!-- Processing → Index -->
+      <line x1="410" y1="131" x2="458" y2="76" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah)"/>
+      <line x1="410" y1="251" x2="458" y2="136" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah)"/>
+      <!-- Index internal -->
+      <line x1="555" y1="157" x2="555" y2="173" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah)"/>
+      <line x1="555" y1="217" x2="555" y2="233" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah)"/>
+      <!-- Index → AI -->
+      <line x1="650" y1="76" x2="698" y2="76" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah)"/>
+      <line x1="650" y1="256" x2="698" y2="136" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah)"/>
+      <!-- AI internal: tools → agent -->
+      <line x1="785" y1="97" x2="785" y2="193" stroke="#dc2626" stroke-width="2" marker-end="url(#ah)"/>
+      <line x1="785" y1="157" x2="785" y2="193" stroke="#dc2626" stroke-width="2" marker-end="url(#ah)"/>
+      <!-- Index → LLM direct -->
+      <line x1="650" y1="136" x2="698" y2="291" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#ah)"/>
+      <line x1="650" y1="196" x2="698" y2="291" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#ah)"/>
+      <!-- AI → Delivery -->
+      <line x1="870" y1="222" x2="918" y2="81" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah)"/>
+      <line x1="870" y1="222" x2="918" y2="141" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah)"/>
+      <line x1="870" y1="291" x2="918" y2="201" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah)"/>
+      <line x1="650" y1="196" x2="918" y2="201" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#ah)"/>
 
-    style Sources fill:#0ea5e9,stroke:#0369a1,color:#fff
-    style Processing fill:#8b5cf6,stroke:#6d28d9,color:#fff
-    style Index fill:#f59e0b,stroke:#d97706,color:#fff
-    style AI fill:#ef4444,stroke:#dc2626,color:#fff
-    style Delivery fill:#22c55e,stroke:#16a34a,color:#fff
-  </pre>
+      <!-- Legend -->
+      <rect x="20" y="310" width="650" height="200" rx="10" fill="#f8fafc" stroke="#e2e8f0"/>
+      <text x="35" y="335" font-weight="700" fill="#0c4a6e" font-size="13">Data Pipeline Legend</text>
+      <line x1="35" y1="355" x2="75" y2="355" stroke="#64748b" stroke-width="2" marker-end="url(#ah)"/><text x="82" y="359" fill="#475569" font-size="11">Primary data flow</text>
+      <line x1="220" y1="355" x2="260" y2="355" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#ah)"/><text x="267" y="359" fill="#475569" font-size="11">Direct LLM path (dashboard)</text>
+      <line x1="460" y1="355" x2="500" y2="355" stroke="#dc2626" stroke-width="2" marker-end="url(#ah)"/><text x="507" y="359" fill="#475569" font-size="11">Agent tool routing</text>
+
+      <rect x="35" y="375" width="12" height="12" rx="2" fill="#e0f2fe" stroke="#0ea5e9"/><text x="55" y="386" fill="#475569" font-size="11">Marketplace + CSV + PDF sources</text>
+      <rect x="35" y="395" width="12" height="12" rx="2" fill="#ede9fe" stroke="#8b5cf6"/><text x="55" y="406" fill="#475569" font-size="11">AI parsing, chunking, geospatial joins, scoring</text>
+      <rect x="35" y="415" width="12" height="12" rx="2" fill="#fef3c7" stroke="#f59e0b"/><text x="55" y="426" fill="#475569" font-size="11">Search index, tables, semantic model YAML</text>
+      <rect x="35" y="435" width="12" height="12" rx="2" fill="#fee2e2" stroke="#ef4444"/><text x="55" y="446" fill="#475569" font-size="11">Cortex Search (RAG), Analyst (Text-to-SQL), Agent, LLM</text>
+      <rect x="35" y="455" width="12" height="12" rx="2" fill="#dcfce7" stroke="#22c55e"/><text x="55" y="466" fill="#475569" font-size="11">Streamlit dashboard, Agent Studio, Snowflake Intelligence</text>
+      <text x="35" y="496" fill="#94a3b8" font-size="10">All AI processing runs inside Snowflake's security perimeter. No data leaves the platform.</text>
+    </svg>
+  </div>
 
   <!-- ============================================================ -->
   <h2 id="rag-pipeline"><span class="section-num">3</span> RAG Pipeline Deep-Dive</h2>
-
-  <p>The project implements a <strong>full Retrieval-Augmented Generation (RAG) pipeline</strong> using Snowflake-native services. RAG is the pattern where an LLM's answer is <em>grounded</em> in retrieved documents rather than relying solely on its training data.</p>
-
-  <h3>3.1 What is RAG and Why Use It?</h3>
+  <p>The project implements a <strong>full Retrieval-Augmented Generation (RAG) pipeline</strong> using Snowflake-native services.</p>
 
   <div class="callout">
-    <strong>For non-technical readers:</strong> Imagine asking a consultant a question. A consultant who just "knows things" might give you a confident but potentially outdated or wrong answer. A consultant who first looks up the relevant policy document and <em>then</em> answers &mdash; citing specific pages &mdash; is far more trustworthy. RAG is the second approach: the AI first <em>retrieves</em> relevant information, then <em>generates</em> an answer based on what it found.
+    <strong>For non-technical readers:</strong> RAG is like a consultant who first looks up the relevant policy document and <em>then</em> answers &mdash; citing specific pages &mdash; rather than relying on memory alone. The AI first <em>retrieves</em> relevant information, then <em>generates</em> an answer grounded in what it found.
   </div>
 
-  <p>RAG solves three fundamental LLM problems:</p>
   <div class="table-wrap">
   <table>
     <thead><tr><th>Problem</th><th>Without RAG</th><th>With RAG</th></tr></thead>
@@ -235,21 +204,78 @@ flowchart LR
   </table>
   </div>
 
-  <h3>3.2 The Five-Stage RAG Pipeline</h3>
+  <h3>3.1 The Five-Stage RAG Pipeline</h3>
 
-  <pre class="mermaid">
-flowchart TD
-    A["Stage 1: INGEST<br/>Upload PDFs to Snowflake Stage"] --> B["Stage 2: PARSE<br/>CORTEX.PARSE_DOCUMENT<br/>extracts text from PDF"]
-    B --> C["Stage 3: CHUNK<br/>Split text into paragraphs<br/>(split on double-newline, filter &gt;80 chars)"]
-    C --> D["Stage 4: INDEX<br/>CORTEX SEARCH SERVICE<br/>creates vector embeddings + BM25 index"]
-    D --> E["Stage 5: RETRIEVE &amp; GENERATE<br/>User question → semantic search → top-k chunks → LLM answer"]
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 900 340" width="900" height="340" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="11">
+      <defs><marker id="ah2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#64748b"/></marker></defs>
 
-    style A fill:#3b82f6,stroke:#1d4ed8,color:#fff
-    style B fill:#8b5cf6,stroke:#6d28d9,color:#fff
-    style C fill:#ec4899,stroke:#be185d,color:#fff
-    style D fill:#f59e0b,stroke:#d97706,color:#fff
-    style E fill:#22c55e,stroke:#16a34a,color:#fff
-  </pre>
+      <!-- Stage 1 -->
+      <rect x="20" y="20" width="150" height="80" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+      <text x="95" y="42" text-anchor="middle" font-weight="700" fill="#1e40af" font-size="12">STAGE 1</text>
+      <text x="95" y="58" text-anchor="middle" font-weight="600" fill="#1e40af">INGEST</text>
+      <text x="95" y="75" text-anchor="middle" fill="#3b82f6" font-size="10">Upload PDFs to</text>
+      <text x="95" y="88" text-anchor="middle" fill="#3b82f6" font-size="10">Snowflake Stage</text>
+      <line x1="170" y1="60" x2="198" y2="60" stroke="#64748b" stroke-width="2" marker-end="url(#ah2)"/>
+
+      <!-- Stage 2 -->
+      <rect x="200" y="20" width="150" height="80" rx="12" fill="#ede9fe" stroke="#8b5cf6" stroke-width="2"/>
+      <text x="275" y="42" text-anchor="middle" font-weight="700" fill="#6d28d9" font-size="12">STAGE 2</text>
+      <text x="275" y="58" text-anchor="middle" font-weight="600" fill="#6d28d9">PARSE</text>
+      <text x="275" y="75" text-anchor="middle" fill="#7c3aed" font-size="10">CORTEX.PARSE_DOCUMENT</text>
+      <text x="275" y="88" text-anchor="middle" fill="#7c3aed" font-size="10">extracts text from PDF</text>
+      <line x1="350" y1="60" x2="378" y2="60" stroke="#64748b" stroke-width="2" marker-end="url(#ah2)"/>
+
+      <!-- Stage 3 -->
+      <rect x="380" y="20" width="150" height="80" rx="12" fill="#fce7f3" stroke="#ec4899" stroke-width="2"/>
+      <text x="455" y="42" text-anchor="middle" font-weight="700" fill="#be185d" font-size="12">STAGE 3</text>
+      <text x="455" y="58" text-anchor="middle" font-weight="600" fill="#be185d">CHUNK</text>
+      <text x="455" y="75" text-anchor="middle" fill="#db2777" font-size="10">Split on \\n\\n</text>
+      <text x="455" y="88" text-anchor="middle" fill="#db2777" font-size="10">Filter &gt; 80 chars</text>
+      <line x1="530" y1="60" x2="558" y2="60" stroke="#64748b" stroke-width="2" marker-end="url(#ah2)"/>
+
+      <!-- Stage 4 -->
+      <rect x="560" y="20" width="150" height="80" rx="12" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+      <text x="635" y="42" text-anchor="middle" font-weight="700" fill="#92400e" font-size="12">STAGE 4</text>
+      <text x="635" y="58" text-anchor="middle" font-weight="600" fill="#92400e">INDEX</text>
+      <text x="635" y="75" text-anchor="middle" fill="#b45309" font-size="10">Cortex Search Service</text>
+      <text x="635" y="88" text-anchor="middle" fill="#b45309" font-size="10">vectors + BM25</text>
+      <line x1="710" y1="60" x2="738" y2="60" stroke="#64748b" stroke-width="2" marker-end="url(#ah2)"/>
+
+      <!-- Stage 5 -->
+      <rect x="740" y="20" width="150" height="80" rx="12" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+      <text x="815" y="42" text-anchor="middle" font-weight="700" fill="#166534" font-size="12">STAGE 5</text>
+      <text x="815" y="58" text-anchor="middle" font-weight="600" fill="#166534">RETRIEVE &amp;</text>
+      <text x="815" y="72" text-anchor="middle" font-weight="600" fill="#166534">GENERATE</text>
+      <text x="815" y="88" text-anchor="middle" fill="#15803d" font-size="10">Question → chunks → LLM</text>
+
+      <!-- Hybrid Search detail (below) -->
+      <rect x="180" y="130" width="630" height="200" rx="10" fill="#f8fafc" stroke="#e2e8f0"/>
+      <text x="495" y="155" text-anchor="middle" font-weight="700" fill="#0c4a6e" font-size="13">Stage 4 Detail: Hybrid Search Architecture</text>
+
+      <rect x="210" y="175" width="180" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6"/><text x="300" y="200" text-anchor="middle" font-weight="600" fill="#1e40af">User Question</text>
+
+      <line x1="300" y1="215" x2="250" y2="240" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah2)"/>
+      <line x1="300" y1="215" x2="440" y2="240" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah2)"/>
+
+      <rect x="200" y="240" width="130" height="35" rx="6" fill="#ede9fe" stroke="#8b5cf6"/><text x="265" y="262" text-anchor="middle" fill="#6d28d9" font-size="10" font-weight="600">Vector Embedding</text>
+      <rect x="390" y="240" width="130" height="35" rx="6" fill="#ede9fe" stroke="#8b5cf6"/><text x="455" y="262" text-anchor="middle" fill="#6d28d9" font-size="10" font-weight="600">Keyword Extraction</text>
+
+      <line x1="265" y1="275" x2="265" y2="292" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah2)"/>
+      <line x1="455" y1="275" x2="455" y2="292" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah2)"/>
+
+      <rect x="200" y="293" width="130" height="30" rx="6" fill="#fce7f3" stroke="#ec4899"/><text x="265" y="312" text-anchor="middle" fill="#be185d" font-size="10" font-weight="600">ANN Similarity</text>
+      <rect x="390" y="293" width="130" height="30" rx="6" fill="#fce7f3" stroke="#ec4899"/><text x="455" y="312" text-anchor="middle" fill="#be185d" font-size="10" font-weight="600">BM25 Match</text>
+
+      <line x1="330" y1="308" x2="560" y2="275" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah2)"/>
+      <line x1="520" y1="308" x2="560" y2="275" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah2)"/>
+
+      <rect x="560" y="248" width="140" height="55" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/><text x="630" y="270" text-anchor="middle" font-weight="700" fill="#92400e" font-size="11">Hybrid Ranking</text><text x="630" y="288" text-anchor="middle" fill="#b45309" font-size="10">RRF / score fusion</text>
+
+      <line x1="700" y1="275" x2="728" y2="275" stroke="#64748b" stroke-width="2" marker-end="url(#ah2)"/>
+      <rect x="730" y="257" width="60" height="38" rx="8" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/><text x="760" y="274" text-anchor="middle" font-weight="700" fill="#166534" font-size="10">Top-K</text><text x="760" y="288" text-anchor="middle" fill="#15803d" font-size="9">chunks</text>
+    </svg>
+  </div>
 
   <div class="flow-step">
     <h4>Stage 1: Ingest &mdash; Upload PDFs to Snowflake</h4>
@@ -261,7 +287,7 @@ COPY FILES INTO @FLOOD_POLICY_DOCS/
 FROM 'snow://workspace/...'
 FILES=('data/policy_docs/Valencia_Flood_Mitigation_Plan_2024_Intro.pdf',
        'data/policy_docs/Valencia_Flood_Mitigation_Plan_2024_Strategies.pdf');</code></pre>
-    <p>Two PDF documents are uploaded to an encrypted internal stage. The <code>DIRECTORY = (ENABLE = TRUE)</code> setting allows Snowflake to list and enumerate files in the stage &mdash; required for the next step.</p>
+    <p>Two PDF documents uploaded to an encrypted internal stage.</p>
   </div>
 
   <div class="flow-step">
@@ -270,52 +296,33 @@ FILES=('data/policy_docs/Valencia_Flood_Mitigation_Plan_2024_Intro.pdf',
 SELECT
     RELATIVE_PATH AS FILE_NAME,
     SNOWFLAKE.CORTEX.PARSE_DOCUMENT(@FLOOD_POLICY_DOCS, RELATIVE_PATH) AS PARSED_CONTENT,
-    PARSED_CONTENT:content::STRING AS FULL_TEXT,
-    CURRENT_TIMESTAMP() AS PARSED_AT
-FROM DIRECTORY(@FLOOD_POLICY_DOCS)
-WHERE RELATIVE_PATH LIKE '%.pdf';</code></pre>
-    <p><code>CORTEX.PARSE_DOCUMENT</code> is Snowflake's built-in document intelligence function. It extracts text (and optionally layout information) from PDFs using OCR and document understanding models. The result is a JSON object with a <code>content</code> field containing the full extracted text.</p>
-    <div class="callout">
-      <strong>Key design decision:</strong> Unlike external OCR tools (Textract, Document AI), PARSE_DOCUMENT runs entirely inside the Snowflake security perimeter. The PDF bytes never leave the platform. This is critical for organizations with data residency requirements.
-    </div>
+    PARSED_CONTENT:content::STRING AS FULL_TEXT
+FROM DIRECTORY(@FLOOD_POLICY_DOCS) WHERE RELATIVE_PATH LIKE '%.pdf';</code></pre>
+    <p><code>CORTEX.PARSE_DOCUMENT</code> extracts text from PDFs using OCR and document understanding models, entirely inside Snowflake.</p>
   </div>
 
   <div class="flow-step">
     <h4>Stage 3: Chunk &mdash; Text Segmentation</h4>
     <pre><code>CREATE OR REPLACE TABLE POLICY_DOC_CHUNKS AS
-SELECT
-    FILE_NAME,
-    chunk.INDEX AS CHUNK_INDEX,
+SELECT FILE_NAME, chunk.INDEX AS CHUNK_INDEX,
     TRIM(chunk.VALUE::STRING) AS CHUNK_TEXT,
     LENGTH(TRIM(chunk.VALUE::STRING)) AS CHUNK_LENGTH
 FROM PARSED_POLICY_DOCS,
     LATERAL FLATTEN(INPUT => SPLIT(FULL_TEXT, '\n\n')) AS chunk
 WHERE LENGTH(TRIM(chunk.VALUE::STRING)) > 80;</code></pre>
-
-    <h4>Why chunk documents?</h4>
-    <p>Feeding an entire 20-page document to a search engine produces poor results because the relevant information is diluted by irrelevant context. Chunking breaks the document into smaller, focused segments so the retrieval step can find the <em>specific paragraph</em> that answers the user's question.</p>
-
-    <h4>Chunking strategy used in this project:</h4>
     <div class="table-wrap">
     <table>
       <thead><tr><th>Parameter</th><th>Value</th><th>Rationale</th></tr></thead>
       <tbody>
-        <tr><td><strong>Split delimiter</strong></td><td><code>\n\n</code> (double newline)</td><td>Natural paragraph boundaries in the extracted PDF text</td></tr>
-        <tr><td><strong>Minimum chunk size</strong></td><td>80 characters</td><td>Filters out headers, page numbers, and short fragments that lack semantic content</td></tr>
-        <tr><td><strong>Overlap</strong></td><td>None</td><td>Paragraph-level chunks are self-contained enough for this document type</td></tr>
-        <tr><td><strong>Method</strong></td><td><code>SPLIT</code> + <code>LATERAL FLATTEN</code></td><td>Pure SQL, no Python dependencies &mdash; runs at warehouse scale</td></tr>
+        <tr><td><strong>Split delimiter</strong></td><td><code>\n\n</code> (double newline)</td><td>Natural paragraph boundaries</td></tr>
+        <tr><td><strong>Min chunk size</strong></td><td>80 characters</td><td>Filters headers, page numbers</td></tr>
+        <tr><td><strong>Overlap</strong></td><td>None</td><td>Paragraphs are self-contained</td></tr>
+        <tr><td><strong>Method</strong></td><td><code>SPLIT</code> + <code>LATERAL FLATTEN</code></td><td>Pure SQL, no Python needed</td></tr>
       </tbody>
     </table>
     </div>
-
     <div class="callout-warn callout">
-      <strong>Alternative chunking strategies (not used here, but worth knowing):</strong>
-      <ul>
-        <li><strong>Fixed-size with overlap</strong> (e.g., 500 tokens with 50-token overlap) &mdash; better for long, unstructured documents without clear paragraph breaks</li>
-        <li><strong>Recursive splitting</strong> (LangChain-style) &mdash; tries paragraph breaks first, then sentence breaks, then character counts</li>
-        <li><strong>Semantic chunking</strong> &mdash; uses embeddings to find topic boundaries; more accurate but computationally expensive</li>
-      </ul>
-      The paragraph-split approach was chosen here because the policy PDFs have clear structural formatting that maps well to double-newline splits.
+      <strong>Other chunking strategies (not used here):</strong> Fixed-size with overlap (500 tokens + 50 overlap), recursive splitting (LangChain-style), semantic chunking (embedding-based topic detection). Paragraph-split was chosen because these PDFs have clear structural formatting.
     </div>
   </div>
 
@@ -327,238 +334,180 @@ WHERE LENGTH(TRIM(chunk.VALUE::STRING)) > 80;</code></pre>
   WAREHOUSE = FLOOD_WH
   TARGET_LAG = '1 day'
 AS (SELECT CHUNK_TEXT, FILE_NAME, CHUNK_INDEX FROM POLICY_DOC_CHUNKS);</code></pre>
-
-    <p><strong>What Cortex Search does under the hood:</strong></p>
-    <ol>
-      <li><strong>Vector Embedding:</strong> Each chunk is converted to a high-dimensional vector (embedding) that captures its semantic meaning. "River flood protection" and "fluvial mitigation infrastructure" produce similar vectors even though the words are different.</li>
-      <li><strong>BM25 Index:</strong> A traditional keyword index is also created for exact-match queries. Cortex Search uses <strong>hybrid retrieval</strong> &mdash; combining semantic similarity with keyword matching &mdash; for the best of both worlds.</li>
-      <li><strong>Auto-refresh:</strong> <code>TARGET_LAG = '1 day'</code> means if the source table changes (new documents added, chunks updated), the index rebuilds within 24 hours automatically.</li>
-    </ol>
-
-    <pre class="mermaid">
-flowchart LR
-    Q["User Question:<br/>'What projects are planned<br/>for the Xuquer river?'"]
-    Q --> VEC["Vector Embedding<br/>of question"]
-    Q --> KW["Keyword Extraction<br/>'Xuquer', 'river', 'projects'"]
-    VEC --> SIM["Semantic Similarity<br/>Search (ANN)"]
-    KW --> BM["BM25 Keyword<br/>Match"]
-    SIM --> MERGE["Hybrid Ranking<br/>(RRF / score fusion)"]
-    BM --> MERGE
-    MERGE --> TOP["Top-K Chunks<br/>(k=3 to 5)"]
-
-    style Q fill:#3b82f6,stroke:#1d4ed8,color:#fff
-    style TOP fill:#22c55e,stroke:#16a34a,color:#fff
-    </pre>
+    <p>Creates both <strong>vector embeddings</strong> (semantic similarity) and a <strong>BM25 keyword index</strong>. Uses hybrid retrieval for best results. Auto-refreshes within 24 hours when source data changes.</p>
   </div>
 
   <div class="flow-step">
     <h4>Stage 5: Retrieve &amp; Generate</h4>
-    <p>When a user asks the Cortex Agent a policy question, the flow is:</p>
-    <ol>
-      <li>The Agent routes the question to the <code>search_policy_docs</code> tool</li>
-      <li>Cortex Search retrieves the top-k most relevant chunks</li>
-      <li>The chunks are injected into the LLM prompt as context</li>
-      <li>The LLM generates an answer <em>grounded</em> in the retrieved text</li>
-    </ol>
-    <p>Testing the search directly:</p>
     <pre><code>SELECT PARSE_JSON(SNOWFLAKE.CORTEX.SEARCH_PREVIEW(
     'FLOOD_ANALYTICS.FLOOD.FLOOD_POLICY_SEARCH',
     '{"query": "What projects are planned for the Xuquer river?",
-      "columns": ["CHUNK_TEXT","FILE_NAME"],
-      "limit": 3}'
+      "columns": ["CHUNK_TEXT","FILE_NAME"], "limit": 3}'
 )) AS SEARCH_RESULTS;</code></pre>
   </div>
 
   <!-- ============================================================ -->
   <h2 id="cortex-agent"><span class="section-num">4</span> Cortex Agent &mdash; Multi-Tool Orchestration</h2>
+  <p>The <strong>FLOOD_RISK_AGENT</strong> acts as an intelligent router that decides which tool(s) to use based on the user's question.</p>
 
-  <p>The <strong>FLOOD_RISK_AGENT</strong> is the project's centerpiece AI component. It acts as an intelligent router that decides which tool(s) to use based on the user's question.</p>
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 900 430" width="900" height="430" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="11">
+      <defs><marker id="ah3" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#64748b"/></marker>
+      <marker id="ahr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#dc2626"/></marker></defs>
 
-  <h3>4.1 Agent Architecture</h3>
+      <!-- User -->
+      <rect x="350" y="15" width="200" height="45" rx="22" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/><text x="450" y="43" text-anchor="middle" font-weight="700" fill="#1e40af" font-size="13">User Question</text>
+      <line x1="450" y1="60" x2="450" y2="88" stroke="#64748b" stroke-width="2" marker-end="url(#ah3)"/>
 
-  <pre class="mermaid">
-flowchart TD
-    USER["User Question"] --> ORCH["Agent Orchestrator<br/>(LLM-based routing)"]
-    
-    ORCH -->|"Data question<br/>(counts, scores, rankings)"| TOOL1["Tool 1: query_flood_data<br/>Cortex Analyst (Text-to-SQL)"]
-    ORCH -->|"Policy question<br/>(strategies, events, EU funds)"| TOOL2["Tool 2: search_policy_docs<br/>Cortex Search (RAG)"]
-    ORCH -->|"Combined question<br/>(risk + policy)"| BOTH["Both Tools<br/>(parallel execution)"]
-    
-    TOOL1 --> SEM["Semantic Model YAML<br/>flood_risk_model.yaml"]
-    SEM --> SQL["Generated SQL"]
-    SQL --> WH["FLOOD_WH Warehouse<br/>Executes query"]
-    WH --> R1["Structured Results"]
-    
-    TOOL2 --> CSS2["FLOOD_POLICY_SEARCH<br/>Cortex Search Service"]
-    CSS2 --> R2["Retrieved Document Chunks"]
-    
-    BOTH --> TOOL1
-    BOTH --> TOOL2
-    
-    R1 --> SYNTH["Response Synthesizer<br/>(LLM combines results)"]
-    R2 --> SYNTH
-    SYNTH --> ANS["Final Answer<br/>(data + citations)"]
+      <!-- Orchestrator -->
+      <rect x="310" y="90" width="280" height="55" rx="10" fill="#fca5a5" stroke="#dc2626" stroke-width="2.5"/><text x="450" y="113" text-anchor="middle" font-weight="700" fill="#7f1d1d" font-size="14">Agent Orchestrator</text><text x="450" y="132" text-anchor="middle" fill="#991b1b" font-size="11">LLM-based routing decision</text>
 
-    style USER fill:#3b82f6,stroke:#1d4ed8,color:#fff
-    style ORCH fill:#ef4444,stroke:#dc2626,color:#fff
-    style ANS fill:#22c55e,stroke:#16a34a,color:#fff
-  </pre>
+      <!-- Routing arrows -->
+      <line x1="370" y1="145" x2="160" y2="190" stroke="#dc2626" stroke-width="2" marker-end="url(#ahr)"/>
+      <text x="230" y="170" fill="#dc2626" font-size="10" font-weight="600">Data questions</text>
+      <line x1="530" y1="145" x2="720" y2="190" stroke="#dc2626" stroke-width="2" marker-end="url(#ahr)"/>
+      <text x="620" y="170" fill="#dc2626" font-size="10" font-weight="600">Policy questions</text>
+      <line x1="450" y1="145" x2="450" y2="168" stroke="#dc2626" stroke-width="2"/>
+      <text x="450" y="182" text-anchor="middle" fill="#dc2626" font-size="10" font-weight="700">Both tools for combined Qs</text>
 
-  <h3>4.2 Agent Specification Breakdown</h3>
+      <!-- Tool 1: Cortex Analyst -->
+      <rect x="30" y="192" width="260" height="50" rx="10" fill="#fce7f3" stroke="#ec4899" stroke-width="2"/><text x="160" y="214" text-anchor="middle" font-weight="700" fill="#9d174d" font-size="12">Tool 1: query_flood_data</text><text x="160" y="232" text-anchor="middle" fill="#be185d" font-size="10">Cortex Analyst (Text-to-SQL)</text>
+      <line x1="160" y1="242" x2="160" y2="265" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah3)"/>
 
-  <p>The agent is defined via a JSON specification passed to <code>CREATE AGENT</code>:</p>
+      <!-- Semantic Model → SQL → Warehouse flow -->
+      <rect x="50" y="267" width="100" height="35" rx="6" fill="#fef3c7" stroke="#f59e0b"/><text x="100" y="289" text-anchor="middle" fill="#92400e" font-size="10" font-weight="600">Semantic Model</text>
+      <line x1="150" y1="284" x2="168" y2="284" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah3)"/>
+      <rect x="170" y="267" width="90" height="35" rx="6" fill="#ede9fe" stroke="#8b5cf6"/><text x="215" y="289" text-anchor="middle" fill="#6d28d9" font-size="10" font-weight="600">SQL Generation</text>
+      <line x1="160" y1="302" x2="160" y2="320" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah3)"/>
+      <rect x="70" y="322" width="180" height="35" rx="6" fill="#dbeafe" stroke="#3b82f6"/><text x="160" y="344" text-anchor="middle" fill="#1e40af" font-size="10" font-weight="600">FLOOD_WH executes SQL</text>
+      <line x1="160" y1="357" x2="160" y2="375" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah3)"/>
+      <rect x="70" y="377" width="180" height="30" rx="6" fill="#dcfce7" stroke="#22c55e"/><text x="160" y="397" text-anchor="middle" fill="#166534" font-size="10" font-weight="600">Structured Results (rows)</text>
 
+      <!-- Tool 2: Cortex Search -->
+      <rect x="600" y="192" width="260" height="50" rx="10" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/><text x="730" y="214" text-anchor="middle" font-weight="700" fill="#166534" font-size="12">Tool 2: search_policy_docs</text><text x="730" y="232" text-anchor="middle" fill="#15803d" font-size="10">Cortex Search (RAG)</text>
+      <line x1="730" y1="242" x2="730" y2="265" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah3)"/>
+
+      <rect x="640" y="267" width="180" height="35" rx="6" fill="#fef3c7" stroke="#f59e0b"/><text x="730" y="289" text-anchor="middle" fill="#92400e" font-size="10" font-weight="600">FLOOD_POLICY_SEARCH</text>
+      <line x1="730" y1="302" x2="730" y2="320" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah3)"/>
+      <rect x="640" y="322" width="180" height="35" rx="6" fill="#ede9fe" stroke="#8b5cf6"/><text x="730" y="339" text-anchor="middle" fill="#6d28d9" font-size="10" font-weight="600">Semantic + Keyword</text><text x="730" y="351" text-anchor="middle" fill="#6d28d9" font-size="10">Hybrid Retrieval</text>
+      <line x1="730" y1="357" x2="730" y2="375" stroke="#64748b" stroke-width="1.5" marker-end="url(#ah3)"/>
+      <rect x="640" y="377" width="180" height="30" rx="6" fill="#dcfce7" stroke="#22c55e"/><text x="730" y="397" text-anchor="middle" fill="#166534" font-size="10" font-weight="600">Retrieved Doc Chunks</text>
+
+      <!-- Merge arrows to synthesizer -->
+      <line x1="250" y1="392" x2="360" y2="410" stroke="#dc2626" stroke-width="2" marker-end="url(#ahr)"/>
+      <line x1="640" y1="392" x2="540" y2="410" stroke="#dc2626" stroke-width="2" marker-end="url(#ahr)"/>
+      <rect x="360" y="405" width="180" height="22" rx="6" fill="#fca5a5" stroke="#dc2626"/><text x="450" y="420" text-anchor="middle" fill="#7f1d1d" font-size="10" font-weight="700">LLM Synthesizes Final Answer</text>
+    </svg>
+  </div>
+
+  <h3>4.1 Agent Specification</h3>
   <div class="table-wrap">
   <table>
     <thead><tr><th>Component</th><th>Value</th><th>Purpose</th></tr></thead>
     <tbody>
-      <tr>
-        <td><strong>Orchestration Model</strong></td>
-        <td><code>"auto"</code></td>
-        <td>Snowflake selects the best available model for routing decisions</td>
-      </tr>
-      <tr>
-        <td><strong>Budget (time)</strong></td>
-        <td>900 seconds</td>
-        <td>Maximum wall-clock time for a single agent interaction</td>
-      </tr>
-      <tr>
-        <td><strong>Budget (tokens)</strong></td>
-        <td>400,000 tokens</td>
-        <td>Maximum token consumption per interaction</td>
-      </tr>
-      <tr>
-        <td><strong>Orchestration Instructions</strong></td>
-        <td>Role definition + tool routing guidance</td>
-        <td>Tells the agent: "Use query_flood_data for statistics, search_policy_docs for policy, both for comprehensive answers"</td>
-      </tr>
-      <tr>
-        <td><strong>Response Instructions</strong></td>
-        <td>Formatting + citation rules</td>
-        <td>"Cite source documents. Distinguish quantitative findings from policy recommendations."</td>
-      </tr>
+      <tr><td><strong>Orchestration Model</strong></td><td><code>"auto"</code></td><td>Snowflake selects the best model for routing</td></tr>
+      <tr><td><strong>Budget (time)</strong></td><td>900 seconds</td><td>Max wall-clock time per interaction</td></tr>
+      <tr><td><strong>Budget (tokens)</strong></td><td>400,000</td><td>Max token consumption per interaction</td></tr>
+      <tr><td><strong>Orchestration Instructions</strong></td><td>Role + routing rules</td><td>"Use query_flood_data for stats, search_policy_docs for policy"</td></tr>
+      <tr><td><strong>Response Instructions</strong></td><td>Formatting + citations</td><td>"Cite sources. Distinguish data from recommendations."</td></tr>
     </tbody>
   </table>
   </div>
 
-  <h3>4.3 Tool Definitions</h3>
-
-  <div class="grid-2">
-    <div class="card">
-      <h4><span class="badge badge-sql">Tool 1</span> query_flood_data</h4>
-      <p><strong>Type:</strong> <code>cortex_analyst_text_to_sql</code></p>
-      <p><strong>What it does:</strong> Translates natural-language questions into SQL queries against the flood risk database.</p>
-      <p><strong>Powered by:</strong> The semantic model YAML file staged at <code>@FLOOD_DATA_STAGE/semantic_model/flood_risk_model.yaml</code></p>
-      <p><strong>Capabilities:</strong> Building counts, comarca rankings, flood zone statistics, vulnerability scores, expected annual losses, critical infrastructure queries</p>
-      <p><strong>Example:</strong> "How many hospitals are in flood zones?" &rarr; generates and executes SQL &rarr; returns table of results</p>
-    </div>
-    <div class="card">
-      <h4><span class="badge badge-rag">Tool 2</span> search_policy_docs</h4>
-      <p><strong>Type:</strong> <code>cortex_search</code></p>
-      <p><strong>What it does:</strong> Semantic search over Valencia's 2024 Flood Mitigation Plan</p>
-      <p><strong>Powered by:</strong> <code>FLOOD_POLICY_SEARCH</code> Cortex Search Service</p>
-      <p><strong>Capabilities:</strong> Mitigation strategies, historical DANA events, infrastructure projects (barranco del Poyo, Xuquer basins), EU Floods Directive, early warning systems, nature-based solutions</p>
-      <p><strong>Example:</strong> "What happened during the 2024 DANA?" &rarr; retrieves relevant policy chunks &rarr; synthesizes narrative</p>
-    </div>
-  </div>
-
-  <h3>4.4 How the Agent Routes Questions</h3>
-
+  <h3>4.2 Question Routing Examples</h3>
   <div class="table-wrap">
   <table>
     <thead><tr><th>User Question</th><th>Tools Used</th><th>Why</th></tr></thead>
     <tbody>
-      <tr><td>"Which 5 comarcas have the highest flood vulnerability?"</td><td><span class="badge badge-sql">query_flood_data</span></td><td>Requires SQL aggregation over structured data</td></tr>
-      <tr><td>"What does the plan say about the barranco del Poyo project?"</td><td><span class="badge badge-rag">search_policy_docs</span></td><td>Requires document retrieval &mdash; no structured data about project details</td></tr>
-      <tr><td>"Which comarcas are most at risk AND what EU funds are available?"</td><td><span class="badge badge-sql">query_flood_data</span> + <span class="badge badge-rag">search_policy_docs</span></td><td>Risk data from database + EU funding from policy documents</td></tr>
-      <tr><td>"What happened during the 2024 DANA?"</td><td><span class="badge badge-rag">search_policy_docs</span></td><td>Historical event information lives in documents, not database tables</td></tr>
+      <tr><td>"Which 5 comarcas have the highest flood vulnerability?"</td><td><span class="badge badge-sql">query_flood_data</span></td><td>SQL aggregation over structured data</td></tr>
+      <tr><td>"What does the plan say about the barranco del Poyo?"</td><td><span class="badge badge-rag">search_policy_docs</span></td><td>Document retrieval needed</td></tr>
+      <tr><td>"Which comarcas are most at risk AND what EU funds exist?"</td><td><span class="badge badge-sql">query_flood_data</span> + <span class="badge badge-rag">search_policy_docs</span></td><td>Data + documents combined</td></tr>
+      <tr><td>"What happened during the 2024 DANA?"</td><td><span class="badge badge-rag">search_policy_docs</span></td><td>Historical info in documents only</td></tr>
     </tbody>
   </table>
   </div>
 
   <!-- ============================================================ -->
   <h2 id="semantic-model"><span class="section-num">5</span> Semantic Model Layer</h2>
-
-  <p>The semantic model is the bridge between natural-language questions and correct SQL. It defines what every column <em>means</em>, how it should be aggregated, and provides verified query patterns to anchor the AI.</p>
+  <p>The semantic model bridges natural-language questions and correct SQL &mdash; defining what every column <em>means</em>, how to aggregate, and verified query patterns.</p>
 
   <h3>5.1 Three Representations, One Model</h3>
 
-  <pre class="mermaid">
-flowchart LR
-    YAML["Cortex Analyst YAML<br/>flood_risk_model.yaml<br/>(file on stage)"] --> SV["Snowflake Semantic View<br/>FLOOD_RISK_MODEL<br/>(native SQL object)"]
-    SV --> OSSIE["Apache Ossie Document<br/>flood_ossie.yaml<br/>(open, portable format)"]
-    
-    YAML -->|"Powers"| CA["Cortex Analyst<br/>(Text-to-SQL)"]
-    SV -->|"Queryable by"| TOOLS["Any Snowflake tool<br/>that reads Semantic Views"]
-    OSSIE -->|"Portable to"| EXT["External tools:<br/>dbt, Tableau, Power BI,<br/>other Ossie-compatible"]
-    
-    style YAML fill:#f59e0b,stroke:#d97706,color:#fff
-    style SV fill:#3b82f6,stroke:#1d4ed8,color:#fff
-    style OSSIE fill:#22c55e,stroke:#16a34a,color:#fff
-  </pre>
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 880 210" width="880" height="210" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="11">
+      <defs><marker id="ah4" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#64748b"/></marker></defs>
 
-  <div class="table-wrap">
-  <table>
-    <thead><tr><th>Representation</th><th>Format</th><th>Purpose</th><th>Created By</th></tr></thead>
-    <tbody>
-      <tr><td><strong>Cortex Analyst YAML</strong></td><td>YAML file on stage</td><td>Powers the agent's text-to-SQL tool</td><td>Hand-authored (Lab 2/6)</td></tr>
-      <tr><td><strong>Snowflake Semantic View</strong></td><td>Native SQL object</td><td>First-class Snowflake object; governed, versionable</td><td><code>SYSTEM$CREATE_SEMANTIC_VIEW_FROM_YAML()</code></td></tr>
-      <tr><td><strong>Apache Ossie</strong></td><td>Open YAML standard</td><td>Vendor-neutral interchange; richer <code>ai_context</code></td><td><code>SYSTEM$READ_OSSIE_YAML_FROM_SEMANTIC_VIEW()</code></td></tr>
-    </tbody>
-  </table>
+      <!-- YAML -->
+      <rect x="20" y="30" width="200" height="70" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+      <text x="120" y="58" text-anchor="middle" font-weight="700" fill="#92400e" font-size="13">Cortex Analyst YAML</text>
+      <text x="120" y="76" text-anchor="middle" fill="#b45309" font-size="10">flood_risk_model.yaml</text>
+      <text x="120" y="90" text-anchor="middle" fill="#b45309" font-size="10">(file on stage)</text>
+
+      <line x1="220" y1="65" x2="268" y2="65" stroke="#64748b" stroke-width="2" marker-end="url(#ah4)"/>
+      <text x="244" y="58" text-anchor="middle" fill="#64748b" font-size="9">converts</text>
+
+      <!-- Semantic View -->
+      <rect x="270" y="30" width="200" height="70" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+      <text x="370" y="58" text-anchor="middle" font-weight="700" fill="#1e40af" font-size="13">Semantic View</text>
+      <text x="370" y="76" text-anchor="middle" fill="#2563eb" font-size="10">FLOOD_RISK_MODEL</text>
+      <text x="370" y="90" text-anchor="middle" fill="#2563eb" font-size="10">(native SQL object)</text>
+
+      <line x1="470" y1="65" x2="518" y2="65" stroke="#64748b" stroke-width="2" marker-end="url(#ah4)"/>
+      <text x="494" y="58" text-anchor="middle" fill="#64748b" font-size="9">exports</text>
+
+      <!-- Ossie -->
+      <rect x="520" y="30" width="200" height="70" rx="10" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+      <text x="620" y="58" text-anchor="middle" font-weight="700" fill="#166534" font-size="13">Apache Ossie</text>
+      <text x="620" y="76" text-anchor="middle" fill="#15803d" font-size="10">flood_ossie.yaml</text>
+      <text x="620" y="90" text-anchor="middle" fill="#15803d" font-size="10">(open, portable format)</text>
+
+      <!-- What each powers -->
+      <line x1="120" y1="100" x2="120" y2="128" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#ah4)"/>
+      <rect x="30" y="130" width="180" height="35" rx="6" fill="#fff7ed" stroke="#f59e0b"/><text x="120" y="148" text-anchor="middle" fill="#92400e" font-size="10">Powers Cortex Analyst</text><text x="120" y="160" text-anchor="middle" fill="#92400e" font-size="10">(Text-to-SQL in Agent)</text>
+
+      <line x1="370" y1="100" x2="370" y2="128" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#ah4)"/>
+      <rect x="280" y="130" width="180" height="35" rx="6" fill="#eff6ff" stroke="#3b82f6"/><text x="370" y="148" text-anchor="middle" fill="#1e40af" font-size="10">Queryable by any</text><text x="370" y="160" text-anchor="middle" fill="#1e40af" font-size="10">Snowflake tool</text>
+
+      <line x1="620" y1="100" x2="620" y2="128" stroke="#22c55e" stroke-width="1.5" marker-end="url(#ah4)"/>
+      <rect x="530" y="130" width="180" height="55" rx="6" fill="#f0fdf4" stroke="#22c55e"/><text x="620" y="148" text-anchor="middle" fill="#166534" font-size="10">Portable to external tools:</text><text x="620" y="162" text-anchor="middle" fill="#166534" font-size="10">dbt, Tableau, Power BI</text><text x="620" y="176" text-anchor="middle" fill="#166534" font-size="10">+ richer ai_context</text>
+
+      <!-- Key insight -->
+      <rect x="740" y="40" width="130" height="150" rx="8" fill="#fef2f2" stroke="#ef4444"/>
+      <text x="805" y="62" text-anchor="middle" font-weight="700" fill="#991b1b" font-size="11">Key Insight</text>
+      <text x="805" y="82" text-anchor="middle" fill="#dc2626" font-size="10">Same business</text>
+      <text x="805" y="96" text-anchor="middle" fill="#dc2626" font-size="10">logic defined</text>
+      <text x="805" y="110" text-anchor="middle" fill="#dc2626" font-size="10">once, used in</text>
+      <text x="805" y="124" text-anchor="middle" fill="#dc2626" font-size="10">3 formats:</text>
+      <text x="805" y="144" text-anchor="middle" fill="#7f1d1d" font-size="10" font-weight="600">Snowflake-native</text>
+      <text x="805" y="158" text-anchor="middle" fill="#7f1d1d" font-size="10" font-weight="600">SQL object</text>
+      <text x="805" y="172" text-anchor="middle" fill="#7f1d1d" font-size="10" font-weight="600">Open standard</text>
+    </svg>
   </div>
 
-  <h3>5.2 Semantic Model Contents</h3>
-
-  <p>The model defines <strong>two tables</strong> with their dimensions, measures, and verified queries:</p>
-
-  <div class="grid-2">
-    <div class="card">
-      <h4>BUILDING_FLOOD_RISK (building-level)</h4>
-      <p><strong>Dimensions (7):</strong> PARISH, FLOOD_ZONE, IN_SPECIAL_FLOOD_HAZARD_AREA, CLASS, NRI_RISK_RATING, INLAND_FLOOD_RISK_RATING, COASTAL_RISK_RATING</p>
-      <p><strong>Measures (10):</strong> BUILDING_COUNT, COMPOSITE_VULNERABILITY_SCORE, NRI_RISK_SCORE, SVI_OVERALL, EXPECTED_ANNUAL_LOSS, EAL_BUILDINGS, BUILDINGS_IN_SFHA, PCT_IN_SFHA, MOBILE_HOME_PCT, NO_VEHICLE_PCT</p>
-    </div>
-    <div class="card">
-      <h4>PARISH_FLOOD_SUMMARY (comarca-level)</h4>
-      <p><strong>Dimensions (1):</strong> PARISH (unique per row)</p>
-      <p><strong>Measures (8):</strong> TOTAL_BUILDINGS, BUILDINGS_IN_SFHA, PCT_IN_SFHA, AVG_COMPOSITE_SCORE, AVG_NRI_RISK_SCORE, AVG_SVI_SCORE, TOTAL_EXPECTED_ANNUAL_LOSS, BUILDING_EXPECTED_ANNUAL_LOSS</p>
-    </div>
-  </div>
-
-  <h3>5.3 Verified Queries (VQRs)</h3>
-
-  <p>Verified queries are pre-approved question/SQL pairs that anchor Cortex Analyst's responses. When a user asks something similar to a VQR, the analyst can match it with high confidence instead of generating SQL from scratch.</p>
-
+  <h3>5.2 Verified Queries (VQRs)</h3>
   <div class="table-wrap">
   <table>
     <thead><tr><th>Name</th><th>Question Pattern</th><th>What It Queries</th></tr></thead>
     <tbody>
-      <tr><td><code>most_vulnerable_comarcas</code></td><td>"Which comarcas have the highest composite flood vulnerability score?"</td><td>Top 10 by AVG_COMPOSITE_SCORE with risk/SVI/loss breakdown</td></tr>
-      <tr><td><code>buildings_in_flood_zones</code></td><td>"How many buildings are in high-risk flood zones by comarca?"</td><td>BUILDINGS_IN_SFHA, TOTAL_BUILDINGS, PCT_IN_SFHA per comarca</td></tr>
-      <tr><td><code>critical_infra_at_risk</code></td><td>"How many hospitals and schools are in flood zones?"</td><td>Counts by CLASS (hospital, school, fire_station, etc.) with % in high-risk</td></tr>
-      <tr><td><code>high_svi_flood_overlap</code></td><td>"Which comarcas have both high social vulnerability and high flood exposure?"</td><td>Comarcas where SVI &ge; 0.6 AND PCT_IN_SFHA &ge; 30%</td></tr>
-      <tr><td><code>total_annual_loss</code></td><td>"What is the total expected annual loss region-wide?"</td><td>SUM of losses across all 34 comarcas</td></tr>
+      <tr><td><code>most_vulnerable_comarcas</code></td><td>"Which comarcas have the highest composite vulnerability?"</td><td>Top 10 by AVG_COMPOSITE_SCORE</td></tr>
+      <tr><td><code>buildings_in_flood_zones</code></td><td>"How many buildings are in high-risk flood zones?"</td><td>BUILDINGS_IN_SFHA per comarca</td></tr>
+      <tr><td><code>critical_infra_at_risk</code></td><td>"How many hospitals and schools are in flood zones?"</td><td>Counts by CLASS with % in high-risk</td></tr>
+      <tr><td><code>high_svi_flood_overlap</code></td><td>"Which comarcas have both high SVI and high flood exposure?"</td><td>SVI &ge; 0.6 AND PCT_IN_SFHA &ge; 30%</td></tr>
+      <tr><td><code>total_annual_loss</code></td><td>"What is the total expected annual loss region-wide?"</td><td>SUM across all 34 comarcas</td></tr>
     </tbody>
   </table>
   </div>
 
-  <h3>5.4 Ossie's <code>ai_context</code> Enhancement</h3>
-
-  <p>Apache Ossie extends the plain <code>description</code> field with structured <code>ai_context</code> &mdash; the key capability that makes AI-facing documentation richer than what YAML alone provides:</p>
-
+  <h3>5.3 Ossie's <code>ai_context</code> Enhancement</h3>
   <pre><code>- name: DANA_RISK_SCORE
   datatype: Decimal
   description: "Risk score (0-100) for DANA-driven flash flooding"
   ai_context:
     instructions: >
-      DANA stands for "Depresion Aislada en Niveles Altos" — an atmospheric
-      cutoff-low system producing sudden flash flooding, distinct from ordinary
-      fluvial or coastal flooding. The October 2024 DANA killed 220+ people.
+      DANA = "Depresion Aislada en Niveles Altos" — an atmospheric cutoff-low
+      causing sudden flash flooding. Oct 2024 DANA killed 220+ people in Valencia.
       Do NOT conflate with generic storm or hurricane risk.
-    synonyms:
-      - "cold drop risk"
-      - "gota fria risk"
-      - "flash flood risk (DANA)"
+    synonyms: ["cold drop risk", "gota fria risk", "flash flood risk (DANA)"]
     examples:
       - "Which comarcas have the highest DANA risk score?"
       - "How does DANA risk compare to fluvial flood risk?"</code></pre>
@@ -566,178 +515,170 @@ flowchart LR
   <!-- ============================================================ -->
   <h2 id="llm-usage"><span class="section-num">6</span> LLM Usage Patterns &amp; Prompting Strategies</h2>
 
-  <p>The project uses LLMs in three distinct ways:</p>
-
   <h3>6.1 Direct Generation (Dashboard AI Tab)</h3>
-
   <pre><code>SELECT SNOWFLAKE.CORTEX.COMPLETE('llama3.1-70b', CONCAT(
     'You are a Valencia flood risk expert. Answer concisely.\n\n',
     'COMARCA DATA:\n',
-    (SELECT LISTAGG(
-        PARISH||': composite='||AVG_COMPOSITE_SCORE||
-        ', SVI='||AVG_SVI_SCORE||
-        ', '||PCT_IN_SFHA||'% in flood zone'||
-        ', loss=$'||TOTAL_EXPECTED_ANNUAL_LOSS, '\n')
-     FROM (SELECT * FROM PARISH_FLOOD_SUMMARY
-           ORDER BY AVG_COMPOSITE_SCORE DESC LIMIT 20)),
+    (SELECT LISTAGG(PARISH||': composite='||AVG_COMPOSITE_SCORE||...) FROM (...LIMIT 20)),
     '\n\nQUESTION: {user_question}\nANSWER:')) AS ANSWER</code></pre>
-
   <div class="table-wrap">
   <table>
     <thead><tr><th>Aspect</th><th>Detail</th></tr></thead>
     <tbody>
-      <tr><td><strong>Model</strong></td><td><code>llama3.1-70b</code> (Meta's open-source 70B parameter model)</td></tr>
-      <tr><td><strong>Pattern</strong></td><td>Context injection &mdash; structured data serialized as text and injected into the prompt</td></tr>
-      <tr><td><strong>Context window</strong></td><td>Top 20 comarcas serialized as key=value text (~2,000 tokens)</td></tr>
-      <tr><td><strong>System prompt</strong></td><td>"You are a Valencia flood risk expert. Answer concisely."</td></tr>
-      <tr><td><strong>Where used</strong></td><td>Streamlit dashboard Tab 4 (AI Insights)</td></tr>
-      <tr><td><strong>Limitation</strong></td><td>Limited to the 20 rows injected into the prompt &mdash; cannot access full database</td></tr>
+      <tr><td><strong>Model</strong></td><td><code>llama3.1-70b</code> (Meta, 70B parameters, open-source)</td></tr>
+      <tr><td><strong>Pattern</strong></td><td>Context injection &mdash; structured data serialized as text into prompt</td></tr>
+      <tr><td><strong>Context</strong></td><td>Top 20 comarcas (~2,000 tokens)</td></tr>
+      <tr><td><strong>Limitation</strong></td><td>Cannot access full database &mdash; only the 20 rows injected</td></tr>
     </tbody>
   </table>
   </div>
 
-  <h3>6.2 Executive Summary Generation (Notebook Lab 5)</h3>
+  <h3>6.2 Executive Summary (Notebook Lab 5)</h3>
+  <p>Same <code>CORTEX.COMPLETE</code> call but with a different persona prompt: <em>"You are a senior flood risk analyst for Valencia Emergency Management. Write a 3-paragraph executive summary."</em> Converts tabular data into a professional narrative.</p>
 
-  <pre><code>SELECT SNOWFLAKE.CORTEX.COMPLETE('llama3.1-70b', CONCAT(
-    'You are a senior flood risk analyst for Valencia Emergency Management. ',
-    'Based on the comarca-level flood risk data below, ',
-    'write a 3-paragraph executive summary.\n\n',
-    'COMARCA RISK DATA (top 15):\n',
-    (SELECT LISTAGG(...) FROM (...LIMIT 15))
-)) AS EXECUTIVE_SUMMARY;</code></pre>
-
-  <div class="table-wrap">
-  <table>
-    <thead><tr><th>Aspect</th><th>Detail</th></tr></thead>
-    <tbody>
-      <tr><td><strong>Pattern</strong></td><td>Structured-data-to-narrative &mdash; convert tabular data into a human-readable report</td></tr>
-      <tr><td><strong>Output format</strong></td><td>3-paragraph professional executive summary</td></tr>
-      <tr><td><strong>Persona prompt</strong></td><td>"Senior flood risk analyst for Valencia Emergency Management"</td></tr>
-      <tr><td><strong>Use case</strong></td><td>Automated report generation from structured data</td></tr>
-    </tbody>
-  </table>
-  </div>
-
-  <h3>6.3 Agent-Mediated Generation (Cortex Agent)</h3>
-
-  <p>Inside the Cortex Agent, the LLM is used at multiple stages:</p>
+  <h3>6.3 Agent-Mediated Generation</h3>
+  <p>Inside the Cortex Agent, the LLM is invoked at <strong>four points</strong>:</p>
   <ol>
-    <li><strong>Orchestration:</strong> The LLM reads the user question and decides which tool(s) to invoke</li>
-    <li><strong>Text-to-SQL (Cortex Analyst):</strong> An LLM generates SQL from the question + semantic model</li>
-    <li><strong>RAG synthesis:</strong> After document chunks are retrieved, an LLM generates the final answer</li>
-    <li><strong>Response composition:</strong> If both tools were used, an LLM merges structured results + document findings into a coherent response</li>
+    <li><strong>Orchestration:</strong> Read the question, decide which tool(s) to invoke</li>
+    <li><strong>Text-to-SQL:</strong> Generate SQL from question + semantic model</li>
+    <li><strong>RAG synthesis:</strong> Generate answer from retrieved document chunks</li>
+    <li><strong>Response composition:</strong> Merge structured results + document findings</li>
   </ol>
-
   <div class="callout">
-    <strong>Model comparison &mdash; <code>CORTEX.COMPLETE</code> vs Cortex Agent:</strong>
-    <ul>
-      <li><code>CORTEX.COMPLETE</code> is a <strong>single LLM call</strong> &mdash; you provide the full prompt and get one response. Simple, fast, but limited to what fits in the prompt.</li>
-      <li>The <strong>Cortex Agent</strong> is a <strong>multi-step orchestration</strong> &mdash; the LLM is called multiple times: once to route, once per tool, once to synthesize. More powerful, but uses more tokens and time.</li>
-    </ul>
+    <strong><code>CORTEX.COMPLETE</code> vs Cortex Agent:</strong> COMPLETE is a single LLM call (fast, simple, limited to prompt contents). The Agent is multi-step orchestration (multiple LLM calls: route &rarr; tool &rarr; synthesize). More powerful, more tokens.
   </div>
 
   <!-- ============================================================ -->
   <h2 id="data-flow"><span class="section-num">7</span> Complete Data Flow: Question to Answer</h2>
+  <p>What happens when a user asks: <em>"Which comarcas are most at risk and what EU funds are available?"</em></p>
 
-  <p>Here is exactly what happens when a user asks the Cortex Agent: <em>"Which comarcas are most at risk and what EU funds are available for flood mitigation?"</em></p>
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 900 560" width="900" height="560" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="11">
+      <defs><marker id="ah5" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#64748b"/></marker></defs>
 
-  <pre class="mermaid">
-sequenceDiagram
-    participant U as User
-    participant A as Agent Orchestrator
-    participant T1 as Tool 1: Cortex Analyst
-    participant SM as Semantic Model
-    participant WH as Warehouse (SQL)
-    participant T2 as Tool 2: Cortex Search
-    participant IDX as Search Index
-    participant LLM as Response LLM
+      <!-- Timeline labels -->
+      <text x="80" y="20" text-anchor="middle" fill="#0c4a6e" font-weight="700" font-size="12">User</text>
+      <text x="300" y="20" text-anchor="middle" fill="#0c4a6e" font-weight="700" font-size="12">Agent</text>
+      <text x="500" y="20" text-anchor="middle" fill="#0c4a6e" font-weight="700" font-size="12">Tool 1: Analyst</text>
+      <text x="700" y="20" text-anchor="middle" fill="#0c4a6e" font-weight="700" font-size="12">Tool 2: Search</text>
 
-    U->>A: "Which comarcas are most at risk<br/>and what EU funds are available?"
-    
-    Note over A: LLM routing decision:<br/>needs BOTH tools
+      <!-- Vertical lifelines -->
+      <line x1="80" y1="30" x2="80" y2="540" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+      <line x1="300" y1="30" x2="300" y2="540" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+      <line x1="500" y1="30" x2="500" y2="540" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+      <line x1="700" y1="30" x2="700" y2="540" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
 
-    par Parallel tool execution
-        A->>T1: Route data question
-        T1->>SM: Read semantic model
-        SM-->>T1: Dimensions, measures, VQRs
-        T1->>WH: Generated SQL:<br/>SELECT PARISH, AVG_COMPOSITE_SCORE...<br/>ORDER BY AVG_COMPOSITE_SCORE DESC LIMIT 10
-        WH-->>T1: Result: 10 rows of comarca risk data
-        T1-->>A: Structured results
+      <!-- Step 1: User → Agent -->
+      <rect x="15" y="50" width="130" height="38" rx="6" fill="#dbeafe" stroke="#3b82f6"/>
+      <text x="80" y="68" text-anchor="middle" fill="#1e40af" font-size="10">"Which comarcas are</text>
+      <text x="80" y="80" text-anchor="middle" fill="#1e40af" font-size="10">at risk + EU funds?"</text>
+      <line x1="145" y1="69" x2="240" y2="69" stroke="#3b82f6" stroke-width="2" marker-end="url(#ah5)"/>
+      <text x="192" y="62" text-anchor="middle" fill="#3b82f6" font-size="9" font-weight="600">1. Ask</text>
 
-    and
-        A->>T2: Route policy question
-        T2->>IDX: Semantic search:<br/>"EU funds flood mitigation"
-        IDX-->>T2: Top-3 relevant chunks<br/>(EU Floods Directive, ERDF, NextGenEU)
-        T2-->>A: Retrieved document chunks
-    end
+      <!-- Step 2: Agent routing -->
+      <rect x="240" y="95" width="120" height="40" rx="6" fill="#fca5a5" stroke="#dc2626"/>
+      <text x="300" y="112" text-anchor="middle" fill="#7f1d1d" font-size="10" font-weight="600">LLM Routing:</text>
+      <text x="300" y="126" text-anchor="middle" fill="#991b1b" font-size="10">needs BOTH tools</text>
 
-    A->>LLM: Combine: structured data + document chunks
-    LLM-->>A: Synthesized answer with data + citations
-    A->>U: "The top 5 most at-risk comarcas are...<br/>According to the Flood Mitigation Plan,<br/>EU funding is available through..."
-  </pre>
+      <!-- Step 3a: Agent → Analyst -->
+      <line x1="360" y1="115" x2="440" y2="160" stroke="#dc2626" stroke-width="1.5" marker-end="url(#ah5)"/>
+      <text x="400" y="145" text-anchor="middle" fill="#dc2626" font-size="9" font-weight="600">3a. Route data Q</text>
+
+      <rect x="440" y="155" width="120" height="30" rx="6" fill="#fef3c7" stroke="#f59e0b"/><text x="500" y="174" text-anchor="middle" fill="#92400e" font-size="10">Read Semantic Model</text>
+      <rect x="440" y="195" width="120" height="40" rx="6" fill="#ede9fe" stroke="#8b5cf6"/><text x="500" y="212" text-anchor="middle" fill="#6d28d9" font-size="10">Generate SQL:</text><text x="500" y="226" text-anchor="middle" fill="#6d28d9" font-size="9">SELECT PARISH,</text>
+      <rect x="440" y="245" width="120" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6"/><text x="500" y="264" text-anchor="middle" fill="#1e40af" font-size="10">Execute on FLOOD_WH</text>
+      <rect x="440" y="285" width="120" height="30" rx="6" fill="#dcfce7" stroke="#22c55e"/><text x="500" y="304" text-anchor="middle" fill="#166534" font-size="10">10 comarca rows</text>
+      <line x1="500" y1="185" x2="500" y2="193" stroke="#64748b" stroke-width="1" marker-end="url(#ah5)"/>
+      <line x1="500" y1="235" x2="500" y2="243" stroke="#64748b" stroke-width="1" marker-end="url(#ah5)"/>
+      <line x1="500" y1="275" x2="500" y2="283" stroke="#64748b" stroke-width="1" marker-end="url(#ah5)"/>
+
+      <!-- Step 3b: Agent → Search (parallel) -->
+      <line x1="360" y1="115" x2="640" y2="160" stroke="#dc2626" stroke-width="1.5" marker-end="url(#ah5)"/>
+      <text x="550" y="135" text-anchor="middle" fill="#dc2626" font-size="9" font-weight="600">3b. Route policy Q (parallel)</text>
+
+      <rect x="640" y="155" width="120" height="30" rx="6" fill="#fef3c7" stroke="#f59e0b"/><text x="700" y="174" text-anchor="middle" fill="#92400e" font-size="10">Semantic search</text>
+      <rect x="640" y="195" width="120" height="40" rx="6" fill="#ede9fe" stroke="#8b5cf6"/><text x="700" y="212" text-anchor="middle" fill="#6d28d9" font-size="10">Hybrid retrieval:</text><text x="700" y="226" text-anchor="middle" fill="#6d28d9" font-size="9">"EU funds flood"</text>
+      <rect x="640" y="245" width="120" height="30" rx="6" fill="#dcfce7" stroke="#22c55e"/><text x="700" y="264" text-anchor="middle" fill="#166534" font-size="10">3 relevant chunks</text>
+      <line x1="700" y1="185" x2="700" y2="193" stroke="#64748b" stroke-width="1" marker-end="url(#ah5)"/>
+      <line x1="700" y1="235" x2="700" y2="243" stroke="#64748b" stroke-width="1" marker-end="url(#ah5)"/>
+
+      <!-- Parallel bracket -->
+      <rect x="420" y="145" width="320" height="140" rx="0" fill="none" stroke="#dc2626" stroke-width="1" stroke-dasharray="6,3"/>
+      <text x="580" y="290" text-anchor="middle" fill="#dc2626" font-size="9" font-style="italic">parallel execution</text>
+
+      <!-- Results back to agent -->
+      <line x1="500" y1="315" x2="360" y2="360" stroke="#22c55e" stroke-width="1.5" marker-end="url(#ah5)"/>
+      <line x1="700" y1="275" x2="360" y2="360" stroke="#22c55e" stroke-width="1.5" marker-end="url(#ah5)"/>
+
+      <!-- Step 4: Synthesize -->
+      <rect x="220" y="355" width="160" height="50" rx="8" fill="#fca5a5" stroke="#dc2626" stroke-width="2"/>
+      <text x="300" y="377" text-anchor="middle" font-weight="700" fill="#7f1d1d" font-size="11">4. LLM Synthesize</text>
+      <text x="300" y="394" text-anchor="middle" fill="#991b1b" font-size="10">Combine data + docs</text>
+
+      <!-- Step 5: Agent → User -->
+      <line x1="220" y1="380" x2="145" y2="420" stroke="#3b82f6" stroke-width="2" marker-end="url(#ah5)"/>
+      <text x="172" y="410" text-anchor="middle" fill="#3b82f6" font-size="9" font-weight="600">5. Answer</text>
+
+      <rect x="15" y="420" width="130" height="70" rx="6" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+      <text x="80" y="440" text-anchor="middle" fill="#166534" font-size="10" font-weight="600">Final Answer:</text>
+      <text x="80" y="455" text-anchor="middle" fill="#15803d" font-size="9">"Top 5 comarcas are...</text>
+      <text x="80" y="468" text-anchor="middle" fill="#15803d" font-size="9">EU funding available</text>
+      <text x="80" y="481" text-anchor="middle" fill="#15803d" font-size="9">through ERDF..."</text>
+    </svg>
+  </div>
 
   <!-- ============================================================ -->
   <h2 id="security"><span class="section-num">8</span> Data Security &amp; Governance</h2>
-
   <div class="grid-2">
     <div class="card">
       <h4>Data Never Leaves Snowflake</h4>
-      <p>All AI processing &mdash; <code>PARSE_DOCUMENT</code>, <code>CORTEX.COMPLETE</code>, Cortex Search, Cortex Analyst &mdash; runs inside Snowflake's infrastructure. No data is sent to external APIs (OpenAI, Anthropic, etc.).</p>
+      <p>All AI processing runs inside Snowflake. No data sent to OpenAI, Anthropic, or any external API.</p>
     </div>
     <div class="card">
       <h4>Encryption at Rest</h4>
-      <p>All stages use <code>ENCRYPTION = (TYPE = 'SNOWFLAKE_SSE')</code> &mdash; Snowflake-managed server-side encryption. PDFs, CSVs, and the semantic model YAML are encrypted at rest.</p>
+      <p>All stages use <code>SNOWFLAKE_SSE</code>. PDFs, CSVs, and YAML are encrypted at rest.</p>
     </div>
     <div class="card">
       <h4>RBAC-Governed Access</h4>
-      <p>The Cortex Agent, Streamlit dashboard, and all tables are subject to Snowflake's role-based access control. Only authorized roles can query the data or invoke the agent.</p>
+      <p>Agent, dashboard, and tables are subject to Snowflake role-based access control.</p>
     </div>
     <div class="card">
       <h4>Semantic Model as Governance</h4>
-      <p>The semantic model acts as a governance layer &mdash; it defines which columns are exposed, how they should be aggregated, and what questions are valid. The agent cannot query columns not defined in the model.</p>
+      <p>The semantic model defines which columns are exposed and how they aggregate. The agent cannot query undefined columns.</p>
     </div>
   </div>
 
   <!-- ============================================================ -->
   <h2 id="glossary"><span class="section-num">9</span> Glossary</h2>
-
   <div class="table-wrap">
   <table>
     <thead><tr><th>Term</th><th>Definition</th></tr></thead>
     <tbody>
-      <tr><td><strong>RAG</strong></td><td><strong>Retrieval-Augmented Generation.</strong> An AI pattern where an LLM's answer is grounded in retrieved documents rather than relying solely on training data. Reduces hallucination and enables current/specific answers.</td></tr>
-      <tr><td><strong>Chunking</strong></td><td>The process of splitting documents into smaller, semantically meaningful segments (chunks) for indexing and retrieval. This project uses paragraph-level splitting (double-newline delimiter).</td></tr>
-      <tr><td><strong>Vector Embedding</strong></td><td>A numerical representation (array of floats) that captures the semantic meaning of text. Similar meanings produce similar vectors, enabling semantic search. Created automatically by Cortex Search.</td></tr>
-      <tr><td><strong>BM25</strong></td><td>A traditional keyword-matching ranking algorithm. Cortex Search combines BM25 with vector search for hybrid retrieval.</td></tr>
-      <tr><td><strong>Cortex PARSE_DOCUMENT</strong></td><td>Snowflake's built-in AI function for extracting text from PDFs (and other document types) using OCR and document understanding models. Runs entirely inside Snowflake.</td></tr>
-      <tr><td><strong>Cortex Search Service</strong></td><td>A managed Snowflake service that creates and maintains a hybrid (vector + keyword) search index over text data. Supports auto-refresh via <code>TARGET_LAG</code>.</td></tr>
-      <tr><td><strong>Cortex COMPLETE</strong></td><td>Snowflake's function for calling LLMs (e.g., <code>llama3.1-70b</code>) directly in SQL. Accepts a prompt string and returns generated text. Runs inside Snowflake, no external API calls.</td></tr>
-      <tr><td><strong>Cortex Analyst</strong></td><td>Snowflake's text-to-SQL service. Given a natural-language question and a semantic model, it generates and executes SQL. Powered by LLMs + the semantic model's verified queries.</td></tr>
-      <tr><td><strong>Cortex Agent</strong></td><td>An AI agent defined in Snowflake that can orchestrate multiple tools (Cortex Analyst, Cortex Search, etc.) to answer complex questions. Uses LLM-based routing to decide which tools to invoke.</td></tr>
-      <tr><td><strong>Semantic Model</strong></td><td>A structured, machine-readable description of what database columns mean &mdash; their business definitions, aggregation rules, and relationships. Powers Cortex Analyst's text-to-SQL accuracy.</td></tr>
-      <tr><td><strong>Verified Query (VQR)</strong></td><td>A pre-approved question/SQL pair in the semantic model. Anchors Cortex Analyst's responses: when a user question matches a VQR pattern, the analyst uses the verified SQL with high confidence.</td></tr>
-      <tr><td><strong>Apache Ossie</strong></td><td>An open, vendor-neutral interchange format for semantic models. Incubating at the Apache Software Foundation. Supports richer <code>ai_context</code> documentation including instructions, synonyms, and examples.</td></tr>
-      <tr><td><strong>Semantic View</strong></td><td>A native Snowflake SQL object (<code>CREATE SEMANTIC VIEW</code>) that stores semantic model metadata as a first-class database object.</td></tr>
-      <tr><td><strong>DANA</strong></td><td><em>Depresion Aislada en Niveles Altos</em> &mdash; a cold-drop atmospheric phenomenon specific to the Iberian Peninsula that produces sudden, catastrophic flash flooding.</td></tr>
-      <tr><td><strong>PATRICOVA</strong></td><td>Valencia's regional flood-risk zoning plan classifying areas into zones A1 (highest risk), A2, B, and C (lowest risk).</td></tr>
-      <tr><td><strong>H3</strong></td><td>Uber's Hexagonal Hierarchical Spatial Index. Divides the Earth's surface into hexagonal cells at various resolutions. Used here for efficient geospatial joins.</td></tr>
-      <tr><td><strong>Dynamic Table</strong></td><td>A Snowflake table that automatically refreshes when its source data changes, within a specified <code>TARGET_LAG</code>. Used here for the alert pipeline.</td></tr>
+      <tr><td><strong>RAG</strong></td><td>Retrieval-Augmented Generation. AI retrieves relevant documents first, then generates answers grounded in them.</td></tr>
+      <tr><td><strong>Chunking</strong></td><td>Splitting documents into smaller segments for indexing. This project uses paragraph-level splitting (\\n\\n).</td></tr>
+      <tr><td><strong>Vector Embedding</strong></td><td>A numerical representation capturing semantic meaning. Similar meanings = similar vectors.</td></tr>
+      <tr><td><strong>BM25</strong></td><td>Traditional keyword-matching ranking. Cortex Search combines it with vectors for hybrid retrieval.</td></tr>
+      <tr><td><strong>CORTEX.PARSE_DOCUMENT</strong></td><td>Snowflake's built-in PDF text extraction using OCR/document AI. Runs inside Snowflake.</td></tr>
+      <tr><td><strong>Cortex Search Service</strong></td><td>Managed hybrid (vector + keyword) search index with auto-refresh.</td></tr>
+      <tr><td><strong>CORTEX.COMPLETE</strong></td><td>Snowflake's LLM function. Runs llama3.1-70b (or other models) inside Snowflake in SQL.</td></tr>
+      <tr><td><strong>Cortex Analyst</strong></td><td>Text-to-SQL service powered by a semantic model + LLMs.</td></tr>
+      <tr><td><strong>Cortex Agent</strong></td><td>Multi-tool AI agent that routes questions to Analyst, Search, or both.</td></tr>
+      <tr><td><strong>Semantic Model</strong></td><td>Machine-readable description of column meanings, aggregation rules, and relationships.</td></tr>
+      <tr><td><strong>Verified Query (VQR)</strong></td><td>Pre-approved question/SQL pair that anchors Cortex Analyst's accuracy.</td></tr>
+      <tr><td><strong>Apache Ossie</strong></td><td>Open, vendor-neutral semantic model interchange format (Apache Incubator).</td></tr>
+      <tr><td><strong>DANA</strong></td><td>Depresion Aislada en Niveles Altos &mdash; cold-drop flash flooding phenomenon specific to Iberian Peninsula.</td></tr>
+      <tr><td><strong>PATRICOVA</strong></td><td>Valencia's flood-risk zoning: A1 (highest), A2, B, C (lowest).</td></tr>
+      <tr><td><strong>H3</strong></td><td>Uber's hexagonal spatial index. Efficient geospatial joins at multiple resolutions.</td></tr>
+      <tr><td><strong>Dynamic Table</strong></td><td>Auto-refreshing Snowflake table with a guaranteed TARGET_LAG freshness.</td></tr>
     </tbody>
   </table>
   </div>
 
-  <hr />
-  <p style="color: light-dark(#94a3b8, #64748b); font-size: 0.85em; text-align: center;">
+  <hr/>
+  <p style="color: #94a3b8; font-size: 0.85em; text-align: center;">
     Valencia Flood Resilience Solution &mdash; AI/LLM/RAG Architecture Document<br/>
     Built for Snowflake Summit 2026 Hands-On Lab &mdash; Generated October 2026
   </p>
 
-  <script>
-    mermaid.initialize({
-      startOnLoad: true,
-      securityLevel: 'strict',
-      theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default'
-    });
-  </script>
 </body>
 </html>
